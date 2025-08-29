@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jacob Hoang · Portfolio Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #0b0f14;
+      --panel: #0f1720;
+      --muted: #a3b0c2;
+      --text: #e6edf6;
+      --primary: #70e1ff;
+      --accent: #ff914d;
+      --bubble-user: linear-gradient(135deg,#70e1ff,#ff914d);
+      --bubble-ai: #121a25;
+      --shadow: 0 10px 30px rgba(0,0,0,.3);
+    }
+    [data-theme="light"]{
+      --bg: #f9f9fb;
+      --panel: #ffffff;
+      --muted: #555;
+      --text: #0b0f14;
+      --primary: #0066ff;
+      --accent: #ff914d;
+      --bubble-user: linear-gradient(135deg,#0066ff,#ff914d);
+      --bubble-ai: #e6eaf3;
+      --shadow: 0 4px 12px rgba(0,0,0,.1);
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:Inter,system-ui; color:var(--text); background:var(--bg); height:100%; overflow:hidden; transition:background .4s ease,color .4s ease;}
+    .wrap{display:grid; grid-template-rows:auto 1fr auto; height:100%;}
+    header{padding:16px; background:rgba(0,0,0,.25); display:flex; justify-content:space-between; align-items:center; transition:background .4s ease;}
+    .brand{display:flex; gap:12px; align-items:center}
+    .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#ff914d,#70e1ff);display:grid;place-items:center;font-weight:800;color:#0a1017;}
+    .actions{display:flex; gap:10px}
+    .btn{padding:8px 12px; border-radius:12px; border:1px solid rgba(0,0,0,.1); background:transparent; cursor:pointer; transition:background .3s ease,color .3s ease,border .3s ease;}
+    .btn.primary{background:linear-gradient(135deg,var(--accent),var(--primary)); color:#fff; border:none;}
+
+    .chat{overflow:auto; padding:20px; transition:background .4s ease;}
+    .messages{display:flex; flex-direction:column; gap:14px;}
+    .msg{display:flex;}
+    .bubble{padding:12px 14px; border-radius:16px; max-width:80%; line-height:1.4; box-shadow:var(--shadow); transition:background .4s ease,color .4s ease;}
+    .msg.ai .bubble{background:var(--bubble-ai); color:var(--text);}
+    .msg.user{justify-content:flex-end;}
+    .msg.user .bubble{background:var(--bubble-user); color:#fff; font-weight:600;}
+    [data-theme="light"] .msg.ai .bubble{background:#e6eaf3; color:#111;}
+    [data-theme="light"] .msg.user .bubble{background:linear-gradient(135deg,#005ce6,#ff914d); color:#fff;}
+
+    .composer{display:flex; gap:10px; padding:16px; transition:background .4s ease;}
+    .input{flex:1; background:var(--panel); border:1px solid #ccc; border-radius:16px; transition:background .4s ease,border .3s ease;}
+    .input input{width:100%; border:none; background:transparent; padding:10px; font-size:15px; color:var(--text); transition:color .3s ease;}
+    .send{background:linear-gradient(135deg,var(--accent),var(--primary)); color:#fff; border:none; border-radius:14px; padding:12px 16px; cursor:pointer; font-weight:800; transition:transform .2s ease;}
+    .send:hover{transform:translateY(-2px)}
+
+    footer{padding:14px; font-size:13px; color:var(--muted); transition:color .4s ease;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand"><div class="avatar">JH</div><div><b>Jacob Hoang</b><div style="font-size:12px;color:var(--muted)">Product / UX Designer · Toronto</div></div></div>
+      <div class="actions">
+        <button class="btn" id="toggle-persona">✨ Tone</button>
+        <button class="btn" id="toggle-theme">🌗 Theme</button>
+        <a class="btn primary" href="mailto:jacobhoang.design@gmail.com">Contact</a>
+      </div>
+    </header>
+    <main class="chat" id="chat"><div class="messages" id="messages"></div></main>
+    <div class="composer"><div class="input"><input id="input" placeholder="Ask about Jacob’s roles, projects, skills, or hobbies…"></div><button class="send" id="send">Send</button></div>
+    <footer>© <span id="year"></span> Jacob Hoang • <a href="https://www.jacobhoang.com" target="_blank">jacobhoang.com</a></footer>
+  </div>
+<script>
+(() => {
+  const el=s=>document.querySelector(s);
+  el('#year').textContent=new Date().getFullYear();
+
+  // Theme toggle
+  const themeBtn=el('#toggle-theme');
+  let theme=localStorage.getItem('theme')||'dark';
+  document.body.setAttribute('data-theme',theme);
+  themeBtn.textContent=theme==='dark'?'🌗 Light':'🌑 Dark';
+  themeBtn.onclick=()=>{theme=theme==='dark'?'light':'dark';document.body.setAttribute('data-theme',theme);localStorage.setItem('theme',theme);themeBtn.textContent=theme==='dark'?'🌗 Light':'🌑 Dark';};
+
+  // Persona toggle
+  const personaBtn=el('#toggle-persona');
+  let persona=localStorage.getItem('persona')||'friendly';
+  personaBtn.onclick=()=>{persona=persona==='friendly'?'professional':'friendly';localStorage.setItem('persona',persona);addAI(`Tone switched to <b>${persona}</b>.`)};
+
+  const kb={who:`I’m Jacob Hoang, Product Designer based in Toronto, blending industrial design roots with systems thinking and 2D/3D artistry.`,hobbies:`Off the clock: basketball 🏀, ping pong 🏓, swimming 🏊, drawing ✏️, and 3D printing 🖨️.`};
+
+  function addUser(text){const msg=document.createElement('div');msg.className='msg user';msg.innerHTML=`<div class="bubble">${text}</div>`;el('#messages').appendChild(msg);}
+  function addAI(text){const msg=document.createElement('div');msg.className='msg ai';msg.innerHTML=`<div class="bubble">${text}</div>`;el('#messages').appendChild(msg);}
+
+  el('#send').onclick=()=>{const v=el('#input').value.trim();if(!v)return;addUser(v);el('#input').value='';if(/hobby|basketball|ping pong|swimming|draw|3d/i.test(v)) addAI(kb.hobbies); else addAI(kb.who);};
+})();
+</script>
+</body>
+</html>
