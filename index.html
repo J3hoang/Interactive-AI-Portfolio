@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jacob Hoang — AI Portfolio Assistant</title>
+  <meta name="description" content="A conversational portfolio for Jacob Hoang. Ask questions about roles, projects, skills, and fit." />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --text: #1e293b;
+      --accent: #2563eb;
+      --accent-2: #06b6d4;
+      --shadow: 0 8px 24px rgba(0,0,0,.1);
+      --radius-xl: 20px;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; background: var(--bg);
+      color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      display: grid; place-items: center; padding: 24px;
+    }
+
+    .app { width: 100%; max-width: 960px; display: grid; gap: 16px; }
+
+    header {
+      display: grid; gap: 10px; align-items: center; grid-template-columns: 64px 1fr auto; padding: 16px;
+      background: var(--card);
+      border: 1px solid #e5e7eb; border-radius: var(--radius-xl); box-shadow: var(--shadow);
+    }
+    .avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display:grid; place-items:center; font-weight:800; color:#fff; }
+    h1 { font-size: clamp(20px, 3vw, 28px); margin: 0; }
+    .sub { color: var(--muted); font-size: 14px; }
+    .links { display:flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      appearance: none; border: 1px solid #e5e7eb; background: #f9fafb;
+      color: var(--text); padding: 10px 14px; border-radius: 999px; font-weight: 600; cursor: pointer;
+      transition: transform .18s ease, background .18s ease, border-color .18s ease; text-decoration: none;
+    }
+    .btn:hover { transform: translateY(-1px); background: #f3f4f6; }
+
+    .shell { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
+    @media (max-width: 900px) { .shell { grid-template-columns: 1fr; } }
+
+    .chat {
+      background: var(--card);
+      border: 1px solid #e5e7eb; border-radius: var(--radius-xl); box-shadow: var(--shadow);
+      display: grid; grid-template-rows: auto 1fr auto; min-height: 64vh; overflow: hidden;
+    }
+
+    .chat-header { padding: 16px; border-bottom: 1px solid #e5e7eb; display:flex; align-items:center; gap:10px; font-weight:600; }
+    .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%{ opacity:.7;} 50%{ opacity:.2;} 100%{ opacity:.7;} }
+
+    .messages { padding: 18px; overflow-y: auto; display: grid; gap: 12px; }
+    .msg { display: flex; gap: 10px; align-items: flex-end; opacity: 0; transform: translateY(6px); animation: in .25s ease forwards; }
+    @keyframes in { to { opacity: 1; transform: translateY(0); } }
+    .bubble { max-width: 78%; padding: 12px 14px; border-radius: 16px; line-height: 1.4; font-size: 15px; }
+    .ai .bubble { background: #f3f4f6; border: 1px solid #e5e7eb; border-top-left-radius: 4px; }
+    .me { justify-content: flex-end; }
+    .me .bubble { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border-top-right-radius: 4px; }
+
+    .typing { display:flex; gap: 4px; padding: 10px 12px; }
+    .dot { width: 8px; height: 8px; background: #9ca3af; border-radius: 50%; animation: bounce 1s infinite ease-in-out; }
+    .dot:nth-child(2){ animation-delay: .15s } .dot:nth-child(3){ animation-delay: .3s }
+    @keyframes bounce { 0%,80%,100%{ transform: translateY(0); opacity:.6 } 40%{ transform: translateY(-6px); opacity:1 }}
+
+    .composer { display:flex; gap: 10px; padding: 14px; border-top: 1px solid #e5e7eb; }
+    .input { flex: 1; border: 1px solid #d1d5db; background: #f9fafb; color: var(--text); border-radius: 999px; padding: 12px 16px; outline: none; font-size: 15px; }
+    .send { padding: 10px 14px; border-radius: 999px; border: none; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; font-weight: 700; cursor: pointer; box-shadow: var(--shadow); }
+
+    .panel { background: var(--card); border: 1px solid #e5e7eb; border-radius: var(--radius-xl); box-shadow: var(--shadow); padding: 16px; display: grid; gap: 14px; align-content: start; }
+    .kicker { color: var(--muted); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; font-weight:600; }
+    .chips { display:flex; flex-wrap: wrap; gap: 10px; }
+    .chip { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 999px; padding: 8px 12px; font-size: 14px; cursor: pointer; transition: transform .16s ease, background .16s ease; }
+    .chip:hover { transform: translateY(-1px); background: #e5e7eb; }
+
+    .card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: var(--radius-lg); padding: 14px; display: grid; gap: 8px; }
+    .meta { color: var(--muted); font-size: 14px; }
+    ul { margin: 8px 0 0 18px; padding: 0; }
+    li { margin: 6px 0; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    footer { opacity: .7; text-align: center; font-size: 12px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="avatar">JH</div>
+      <div>
+        <h1>Jacob Hoang — Product & Industrial Designer</h1>
+        <div class="sub">Welcome! This site is an interactive AI assistant that lets you learn about me in a conversational way.</div>
+      </div>
+      <div class="links">
+        <a class="btn" href="mailto:jacobhoang.design@gmail.com">Email</a>
+        <a class="btn" href="https://www.jacobhoang.com" target="_blank" rel="noopener">Portfolio</a>
+      </div>
+    </header>
+
+    <div class="shell">
+      <!-- Chat -->
+      <section class="chat" aria-label="Chat with Jacob's AI assistant">
+        <div class="chat-header"><div class="pulse"></div> Chat Assistant · Ask about roles, projects, skills, or fit</div>
+        <div id="messages" class="messages" role="log" aria-live="polite"></div>
+        <form id="composer" class="composer" autocomplete="off">
+          <input id="input" class="input" name="q" placeholder="Type your question… (e.g., What roles are you targeting?)" />
+          <button class="send" aria-label="Send">Send</button>
+        </form>
+      </section>
+
+      <!-- Right Panel: Guidance & Info -->
+      <aside class="panel">
+        <div class="kicker">Suggested Questions</div>
+        <div class="chips" id="chips"></div>
+
+        <div class="card">
+          <div class="kicker">Quick Facts</div>
+          <div class="meta">Toronto · B.Des (Industrial Design) — OCAD University · Tools: Figma, FigJam, Miro, Adobe CC, Blender, SolidWorks, Fusion 360</div>
+        </div>
+
+        <div class="card">
+          <div class="kicker">Contact</div>
+          <div class="meta">
+            Email: <a href="mailto:jacobhoang.design@gmail.com">jacobhoang.design@gmail.com</a>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer>© <span id="year"></span> Jacob Hoang · Hosted on GitHub Pages · Built as a conversational portfolio.</footer>
+  </div>
+
+  <script>
+    // --- Responses ---
+    const brain = {
+      intro: `Hi! I’m Jacob’s AI assistant. You can ask about his target roles, projects, skills, and why he’s a strong fit for your team.`,
+      roles: {
+        summary: `Jacob is focused on Product Designer (UX/UI) and Industrial Designer opportunities, particularly in teams that combine digital and physical product experiences.`,
+        why: `He’s excited about these roles because they align with his strengths in research, prototyping, and building scalable design systems that bridge physical and digital.`
+      },
+      projects: [
+        { title: "Custom-fit Automotive Liners — TuxMat (2024–present)", impact: ["Led multiple development projects from 3D scanning through CAD and prototype testing.","Improved workflows for stronger cross-functional collaboration.","Researched and conceptualized new accessories to expand revenue streams."]},
+        { title: "E-commerce Website Redesign — Action Screen (2023–2024)", impact: ["Planned and executed a full storefront refresh with the business owner.","Produced 2D/3D assets that clarified products and boosted buyer confidence."]},
+        { title: "Enterprise DAM UI & Design System — Tenovos (2021–2023)", impact: ["Delivered new UI features from sketches to hi-fi prototypes.","Ran research sessions and usability testing.","Improved design system guidelines for smoother handoff to developers."]},
+        { title: "CRM Navigation & Accessibility — VTO Group (2020–2021)", impact: ["Redesigned internal CRM navigation for faster workflows.","Enhanced accessibility in typography and components."]},
+      ],
+      skills: {
+        competencies: ["Wireframing, IA, design systems, responsive design","User research: interviews, heuristic evals, personas, usability testing","Prototyping: hi-fi, flow charts, journey mapping, storyboarding","3D modeling & CAD for product development","Illustration & asset creation"],
+        tools: ["Figma, FigJam, Miro, Adobe Creative Suite","Blender, SolidWorks, Fusion 360, KeyShot, Procreate","Microsoft Office"],
+        experience: ["TuxMat — Industrial Designer (2024–present)","Action Screen — Digital Designer (2023–2024)","Tenovos — Product Designer (2021–2023)","VTO Group — Digital Product Designer (2020–2021)"]
+      },
+      fitTemplate: (type) => `Jacob is a strong fit for ${type} because he:\n• Works end-to-end: research → IA → prototyping → implementation.\n• Communicates clearly with engineers and non-design stakeholders.\n• Builds pragmatic, scalable design systems.\n• Balances usability with brand and performance.\n• Brings hands-on 3D/CAD experience for hardware-adjacent or physical-digital products.`,
+      portfolio: `You can see Jacob’s work at <a href="https://www.jacobhoang.com" target="_blank" rel="noopener">jacobhoang.com</a>.`,
+      tour: ["Start with the TuxMat projects to see physical–digital workflow.","Then, check the Tenovos UI work for system thinking.","Finally, the Action Screen redesign for storefront strategy and 3D craft."]
+    };
+
+    const suggestedQuestions = [
+      "What roles are you targeting and why?",
+      "Give me a quick tour of your projects.",
+      "What are your core skills and tools?",
+      "Why are you a good fit for a SaaS company?",
+      "Tell me about your experience.",
+      "Where can I see your portfolio?"
+    ];
+
+    const $ = (sel, el = document) => el.querySelector(sel);
+    const el = (tag, cls) => { const n = document.createElement(tag); if (cls) n.className = cls; return n; };
+    const messages = $("#messages");
+    const input = $("#input");
+
+    function addMessage(text, type = 'ai', asHTML = false) {
+      const row = el('div', `msg ${type}`);
+      const bubble = el('div', 'bubble');
+      if (asHTML) bubble.innerHTML = text; else bubble.textContent = text;
+      row.appendChild(bubble);
+      messages.appendChild(row);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function showTyping(show=true){
+      if(show){
+        const row = el('div', 'msg ai typing-row');
+        const bubble = el('div', 'bubble typing');
+        bubble.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+        row.appendChild(bubble); messages.appendChild(row); messages.scrollTop = messages.scrollHeight;
+      } else {
+        const t = $('.typing-row'); if(t) t.remove();
+      }
+    }
+
+    const intent = (q) => {
+      const s = q.toLowerCase();
+      const has = (...keys) => keys.some(k => s.includes(k));
+      if (has('role','target','position')) return 'roles';
+      if (has('project','portfolio','work','case study','impact')) return 'projects';
+      if (has('skill','experience','background','tool','stack')) return has('experience')? 'experience':'skills';
+      if (has('fit','good fit','why you')) return 'fit';
+      if (has('tour')) return 'tour';
+      if (has('contact','email')) return 'contact';
+      return 'fallback';
+    };
+
+    function answerRoles(){ return `<strong>Target roles</strong>: ${brain.roles.summary}<br><br><em>${brain.roles.why}</em>`; }
+    function answerProjects(){ return `<div><strong>Selected projects</strong><ul>${brain.projects.map(p=>`<li><strong>${p.title}</strong><ul>${p.impact.map(i=>`<li>${i}</li>`).join('')}</ul></li>`).join('')}</ul></div>`; }
+    function answerSkills(){ return `<div><strong>Core skills</strong><ul>${brain.skills.competencies.map(x=>`<li>${x}</li>`).join('')}</ul><strong>Tools</strong><ul>${brain.skills.tools.map(x=>`<li>${x}</li>`).join('')}</ul></div>`; }
+    function answerExperience(){ return `<div><strong>Experience</strong><ul>${brain.skills.experience.map(x=>`<li>${x}</li>`).join('')}</ul></div>`; }
+    function extract
